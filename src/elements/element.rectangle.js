@@ -2,18 +2,18 @@
 
 module.exports = function(Chart) {
 
-	var helpers = Chart.helpers;
+	var helpers = Chart.helpers,
+		globalOpts = Chart.defaults.global;
 
-	Chart.defaults.global.elements.rectangle = {
-		backgroundColor: Chart.defaults.global.defaultColor,
+	globalOpts.elements.rectangle = {
+		backgroundColor: globalOpts.defaultColor,
 		borderWidth: 0,
-		borderColor: Chart.defaults.global.defaultColor,
+		borderColor: globalOpts.defaultColor,
 		borderSkipped: 'bottom'
 	};
 
 	Chart.elements.Rectangle = Chart.Element.extend({
 		draw: function() {
-
 			var ctx = this._chart.ctx;
 			var vm = this._view;
 
@@ -31,11 +31,10 @@ module.exports = function(Chart) {
 				top += halfStroke;
 			}
 
-			ctx.beginPath();
-
-			ctx.fillStyle = vm.backgroundColor;
-			ctx.strokeStyle = vm.borderColor;
-			ctx.lineWidth = vm.borderWidth;
+      //ctx.beginPath();
+      ctx.fillStyle = vm.backgroundColor;
+      //ctx.strokeStyle = vm.borderColor;
+      //ctx.lineWidth = vm.borderWidth;
 
 			// Corner points, from bottom-left to bottom-right clockwise
 			// | 1 2 |
@@ -47,25 +46,30 @@ module.exports = function(Chart) {
 				[rightX, vm.base]
 			];
 
-			// Find first (starting) corner with fallback to 'bottom' 
-			var borders = ['bottom', 'left', 'top', 'right'];
-			var startCorner = borders.indexOf(vm.borderSkipped, 0);
-			if (startCorner === -1)
-				startCorner = 0;
+      var width = (rightX - leftX) / 2;
+      var height = vm.base - top;
 
-			function cornerAt(index) {
-				return corners[(startCorner + index) % 4];
-			}
+      Chart.helpers.drawRoundedRectangle(ctx, leftX, top, width, height, 3.5);
 
-			// Draw rectangle from 'startCorner'
-			ctx.moveTo.apply(ctx, cornerAt(0));
-			for (var i = 1; i < 4; i++)
-				ctx.lineTo.apply(ctx, cornerAt(i));
+			//// Find first (starting) corner with fallback to 'bottom' 
+			//var borders = ['bottom', 'left', 'top', 'right'];
+			//var startCorner = borders.indexOf(vm.borderSkipped, 0);
+			//if (startCorner === -1)
+				//startCorner = 0;
 
-			ctx.fill();
-			if (vm.borderWidth) {
-				ctx.stroke();
-			}
+			//function cornerAt(index) {
+				//return corners[(startCorner + index) % 4];
+			//}
+
+			//// Draw rectangle from 'startCorner'
+			//ctx.moveTo.apply(ctx, cornerAt(0));
+			//for (var i = 1; i < 4; i++)
+				//ctx.lineTo.apply(ctx, cornerAt(i));
+
+      ctx.fill();
+      //if (vm.borderWidth) {
+        //ctx.stroke();
+      //}
 		},
 		height: function() {
 			var vm = this._view;
@@ -73,26 +77,15 @@ module.exports = function(Chart) {
 		},
 		inRange: function(mouseX, mouseY) {
 			var vm = this._view;
-			var inRange = false;
-
-			if (vm) {
-				if (vm.y < vm.base) {
-					inRange = (mouseX >= vm.x - vm.width / 2 && mouseX <= vm.x + vm.width / 2) && (mouseY >= vm.y && mouseY <= vm.base);
-				} else {
-					inRange = (mouseX >= vm.x - vm.width / 2 && mouseX <= vm.x + vm.width / 2) && (mouseY >= vm.base && mouseY <= vm.y);
-				}
-			}
-
-			return inRange;
+			return vm ? 
+					(vm.y < vm.base ? 
+						(mouseX >= vm.x - vm.width / 2 && mouseX <= vm.x + vm.width / 2) && (mouseY >= vm.y && mouseY <= vm.base) :
+						(mouseX >= vm.x - vm.width / 2 && mouseX <= vm.x + vm.width / 2) && (mouseY >= vm.base && mouseY <= vm.y)) :
+					false;
 		},
 		inLabelRange: function(mouseX) {
 			var vm = this._view;
-
-			if (vm) {
-				return (mouseX >= vm.x - vm.width / 2 && mouseX <= vm.x + vm.width / 2);
-			} else {
-				return false;
-			}
+			return vm ? (mouseX >= vm.x - vm.width / 2 && mouseX <= vm.x + vm.width / 2) : false;
 		},
 		tooltipPosition: function() {
 			var vm = this._view;
